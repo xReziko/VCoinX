@@ -1,17 +1,12 @@
 const fs = require('fs'),
     colors = require('colors/safe'),
-    ReadLine = require('readline'),
-    GithubContent = require('github-content');
+    ReadLine = require('readline');
 
 const pJson = require('./package.json');
 
-let GitCUpdate = new GithubContent({
-    owner: 'cursedseal',
-    repo: 'vcoinx',
-    branch: 'master'
-});
-
 let checkUpdateTTL = null,
+    askIn = false,
+    askInTTL = null,
     onUpdatesCB = false,
     offColors = false;
 
@@ -90,7 +85,7 @@ function dateF(date) {
 }
 
 let rl = ReadLine.createInterface(process.stdin, process.stdout);
-rl.setPrompt('> ');
+rl.setPrompt('_> ');
 rl.prompt();
 rl.isQst = false;
 rl.questionAsync = (question) => {
@@ -103,34 +98,12 @@ rl.questionAsync = (question) => {
     });
 };
 
+
 function hashPassCoin(e, t) {
     return (e % 2 === 0) ?
         (e + t - 15) :
         (e + t - 109);
 }
-
-function checkUpdates() {
-    GitCUpdate.files(['package.json'], (err, results) => {
-        if (err) return;
-        results.forEach(file => {
-            let c = file.contents.toString();
-            if (c[0] === "{") {
-                let data = JSON.parse(c);
-
-                let msg = (data.version > pJson.version) ? "Было выпущено новое обновление! -> github.com/cursedseal/VCoinX \t[" + (data.version + "/" + pJson.version) + "]" :
-                    false;
-
-                if (msg) {
-                    if (onUpdatesCB) onUpdatesCB(msg);
-                    else con(msg, "white", "Red");
-                }
-            }
-        });
-    });
-}
-
-checkUpdateTTL = setInterval(checkUpdates, 1e7);
-checkUpdates();
 
 function rand(min, max) {
     if (max === undefined)
@@ -167,17 +140,6 @@ function appendFileAsync(path, data) {
     return new Promise((resolve, reject) => fs.appendFile(path, data, err => resolve(err)));
 }
 
-function getVersion() {
-    return pJson.version;
-}
-
-function setTerminalTitle(title) {
-  process.stdout.write(
-    String.fromCharCode(27) + "]0;" + title + String.fromCharCode(7)
-  );
-}
-
-
 module.exports = {
     rl,
     con,
@@ -186,15 +148,10 @@ module.exports = {
     offColors,
     formateSCORE,
     hashPassCoin,
-    checkUpdates,
-    checkUpdateTTL,
-    onUpdates: cb => (onUpdatesCB = cb, true),
     existsFile,
     existsAsync,
     writeFileAsync,
     appendFileAsync,
-    getVersion,
-    setTerminalTitle,
     infLog,
     rand,
 }
